@@ -20,6 +20,7 @@ parameters = {
 }
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+print(GEMINI_API_KEY)
 
 api_response = requests.get(OWM_Endpoint, params=parameters)
 api_response.raise_for_status()
