@@ -1,0 +1,31 @@
+name: Daily Weather SMS
+
+on:
+  schedule:
+    - cron: '0 11 * * *'  # 每天 UTC 13:00（= Nebraska 早上 8 点）
+  workflow_dispatch:      # 允许你手动点击运行
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests twilio google-genai
+
+      - name: Run script
+        env:
+          TWILIO_SID: ${{ secrets.TWILIO_SID }}
+          TWILIO_TOKEN: ${{ secrets.TWILIO_TOKEN }}
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          OWM_KEY: ${{ secrets.OWM_KEY }}
+        run: python main.py
