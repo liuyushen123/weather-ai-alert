@@ -2,8 +2,8 @@ name: Daily Weather SMS
 
 on:
   schedule:
-    - cron: '0 11 * * *'  # 每天 UTC 13:00（= Nebraska 早上 8 点）
-  workflow_dispatch:      # 允许你手动点击运行
+    - cron: '13 12 * * *'
+  workflow_dispatch:      
 
 jobs:
   run-script:
@@ -24,8 +24,8 @@ jobs:
 
       - name: Run script
         env:
-          TWILIO_SID: ${{ secrets.TWILIO_SID }}
-          TWILIO_TOKEN: ${{ secrets.TWILIO_TOKEN }}
-          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          ACCOUNT_SID: ${{ secrets.ACCOUNT_SID }}
+          AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           OWM_KEY: ${{ secrets.OWM_KEY }}
         run: python main.py
