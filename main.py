@@ -9,9 +9,9 @@ LOCATION = "Lincoln NE"
 
 now = dt.datetime.now()
 
-OWM_Endpoint = "https://api.openweathermap.org/data/2.5/forecast?"
-Account_SID = os.getenv("Account_SID")
-Auth_Token = os.getenv("Auth_Token")
+OWM_Endpoint = "https://api.openweathermap.org/data/2.5/forecast"
+Account_SID = os.getenv("ACCOUNT_SID")
+Auth_Token = os.getenv("AUTH_TOKEN")
 parameters = {
     "lat": 40.8137,
     "lon": -96.7026,
@@ -20,8 +20,6 @@ parameters = {
 }
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-print(GEMINI_API_KEY)
-
 api_response = requests.get(OWM_Endpoint, params=parameters)
 api_response.raise_for_status()
 api_response = api_response.json()
