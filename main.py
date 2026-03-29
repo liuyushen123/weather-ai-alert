@@ -5,33 +5,55 @@ import requests
 from google import genai
 from twilio.rest import Client
 
+# ==========================================
+# 1. CONFIGURATION & CREDENTIALS
+# ==========================================
 LOCATION = "Lincoln NE"
-
-now = dt.datetime.now()
-
 OWM_Endpoint = "https://api.openweathermap.org/data/2.5/forecast"
+
+OWM_KEY = os.getenv("OWM_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 Account_SID = os.getenv("ACCOUNT_SID")
 Auth_Token = os.getenv("AUTH_TOKEN")
+
+
+# ==========================================
+# 2. HELPER FUNCTIONS
+# ==========================================
+def log(message):
+    """Helper function to print formatted log messages."""
+    current_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{current_time}] {message}")
+
+
+# ==========================================
+# 3. MAIN SCRIPT EXECUTION
+# ==========================================
+now = dt.datetime.now()
+log("🚀 Starting daily weather script...")
+
+# --- Step A: Fetch Weather Data ---
+log(f"☁️ Fetching weather data for {LOCATION}...")
 parameters = {
     "lat": 40.8137,
     "lon": -96.7026,
-    "appid": os.getenv("OWM_KEY"),
+    "appid": OWM_KEY,
     "cnt": 4,
 }
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 api_response = requests.get(OWM_Endpoint, params=parameters)
 api_response.raise_for_status()
 api_response = api_response.json()
+log("✅ Weather data fetched successfully.")
 
-client = genai.Client(api_key=GEMINI_API_KEY)
 simplified_weather = []
 for interval in api_response["list"]:
     condition = interval["weather"][0]["main"]
     weather_id = interval["weather"][0]["id"]
-
     simplified_weather.append({"condition": condition, "id": weather_id})
 
+# --- Step B: Generate Prompt ---
+log("🤖 Sending prompt to Gemini 2.5 Flash...")
 prompt = f"""
 You are a witty, friendly weather assistant sending a morning update to a close friend.
 
@@ -73,32 +95,26 @@ RULES:
 6. STRICT: Output ONLY the message text (no quotes, no explanations)
 """
 
-
+# --- Step C: Call Gemini API ---
+client = genai.Client(api_key=GEMINI_API_KEY)
 response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
 
-gemini_message = response.text.strip()
+final_message = response.text.strip()
+log(f"✅ Gemini summary generated ({len(final_message)} chars).")
+log(f"📝 MESSAGE PREVIEW:\n{final_message}\n" + "-" * 40)
 
+# --- Step D: Send Message via Twilio ---
+twilio_client = Client(Account_SID, Auth_Token)
+log("💬 Attempting to send Twilio WhatsApp message...")
 
-def send_bark():
-    parameter = {
-        "title": "Today's Weather",
-        "body": gemini_message,
-        "icon": "https://vfiles.gtimg.cn/vupload/20211104/1636015504785.png",
-        "group": "WeatherReport",
-        "isArchive": 1,
-    }
-
-    url = "https://api.day.app/cQGdBMU9Pc6CJhbgDWA5yG/"
-    requests.get(url, params=parameter)
-
-
-def send_whats_app():
-    twilio_client = Client(Account_SID, Auth_Token)
+try:
     message = twilio_client.messages.create(
         from_="whatsapp:+14155238886",
-        body=gemini_message,
+        body=final_message,
         to="whatsapp:+16266778986",
     )
+    log(f"✅ Twilio message sent! SID: {message.sid}")
+except Exception as e:
+    log(f"❌ Twilio message failed: {e}")
 
-
-send_whats_app()
+log("🎉 Script finished execution.")
