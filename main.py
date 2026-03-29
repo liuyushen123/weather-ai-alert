@@ -15,6 +15,7 @@ OWM_KEY = os.getenv("OWM_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 Account_SID = os.getenv("ACCOUNT_SID")
 Auth_Token = os.getenv("AUTH_TOKEN")
+BARK_URL = os.getenv("BARK_URL")
 
 
 # ==========================================
@@ -26,18 +27,39 @@ def log(message):
     print(f"[{current_time}] {message}")
 
 
-def send_twilio():
+def send_twilio(message_text):
     log("💬 Attempting to send Twilio WhatsApp message...")
     twilio_client = Client(Account_SID, Auth_Token)
     try:
         message = twilio_client.messages.create(
             from_="whatsapp:+14155238886",
-            body=final_message,
+            body=message_text,
             to="whatsapp:+16266778986",
         )
         log(f"✅ Twilio message sent! SID: {message.sid}")
     except Exception as e:
         log(f"❌ Twilio message failed: {e}")
+
+
+def send_bark(message_text):
+    log("📱 Attempting to send Bark push notification...")
+    if not BARK_URL:
+        log("⚠️ BARK_URL environment variable is missing. Skipping notification.")
+        return
+    parameters = {
+        "title": f"Weather in {LOCATION}",
+        "body": message_text,
+        "icon": "https://vfiles.gtimg.cn/vupload/20211104/1636015504785.png",
+        "group": "WeatherReport",
+        "isArchive": 1,
+    }
+
+    try:
+        response = requests.get(BARK_URL, params=parameters)
+        response.raise_for_status()
+        log("✅ Bark notification sent successfully.")
+    except Exception as e:
+        log(f"❌ Bark notification failed: {e}")
 
 
 # ==========================================
@@ -115,9 +137,9 @@ response = client.models.generate_content(model="gemini-2.5-flash", contents=pro
 
 final_message = response.text.strip()
 log(f"✅ Gemini summary generated ({len(final_message)} chars).")
-log(f"📝 MESSAGE PREVIEW:\n{final_message}\n" + "-" * 40)
+log(f"📝 MESSAGE PREVIEW:\n{final_message}\n" + "-" * 60)
 
-# --- Step D: Send Message via Twilio ---
-
+send_bark(final_message)
+send_twilio(final_message)
 
 log("🎉 Script finished execution.")
