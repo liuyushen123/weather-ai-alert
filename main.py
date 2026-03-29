@@ -26,6 +26,20 @@ def log(message):
     print(f"[{current_time}] {message}")
 
 
+def send_twilio():
+    log("💬 Attempting to send Twilio WhatsApp message...")
+    twilio_client = Client(Account_SID, Auth_Token)
+    try:
+        message = twilio_client.messages.create(
+            from_="whatsapp:+14155238886",
+            body=final_message,
+            to="whatsapp:+16266778986",
+        )
+        log(f"✅ Twilio message sent! SID: {message.sid}")
+    except Exception as e:
+        log(f"❌ Twilio message failed: {e}")
+
+
 # ==========================================
 # 3. MAIN SCRIPT EXECUTION
 # ==========================================
@@ -104,17 +118,6 @@ log(f"✅ Gemini summary generated ({len(final_message)} chars).")
 log(f"📝 MESSAGE PREVIEW:\n{final_message}\n" + "-" * 40)
 
 # --- Step D: Send Message via Twilio ---
-twilio_client = Client(Account_SID, Auth_Token)
-log("💬 Attempting to send Twilio WhatsApp message...")
 
-try:
-    message = twilio_client.messages.create(
-        from_="whatsapp:+14155238886",
-        body=final_message,
-        to="whatsapp:+16266778986",
-    )
-    log(f"✅ Twilio message sent! SID: {message.sid}")
-except Exception as e:
-    log(f"❌ Twilio message failed: {e}")
 
 log("🎉 Script finished execution.")
