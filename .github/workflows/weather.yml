@@ -2,7 +2,7 @@ name: Daily Weather SMS
 
 on:
   schedule:
-    - cron: '13 12 * * *'
+    - cron: '30 11 * * *'
   workflow_dispatch:      
 
 jobs:
